@@ -1,0 +1,32 @@
+{
+  "name": "@typeservice/http",
+  "version": "1.0.0",
+  "description": "widget:http",
+  "author": "shenyunjie ",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/http",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@types/koa": "^2.13.4",
+    "@typeservice/decorator": "^1.0.0",
+    "@typeservice/exception": "^1.0.0",
+    "inversify": "^6.0.1",
+    "koa": "^2.13.4",
+    "koa-router-find-my-way": "^5.0.0"
+  }
+}

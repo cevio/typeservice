@@ -1,0 +1,24 @@
+{
+  "name": "@typeservice/exception",
+  "version": "1.0.0",
+  "description": "widget:exception",
+  "author": "shenyunjie ",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/exception",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
