@@ -1,6 +1,6 @@
 {
   "name": "@typeservice/http",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "widget:http",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/http",
@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "@types/koa": "^2.13.4",
-    "@typeservice/decorator": "^1.0.0",
-    "@typeservice/exception": "^1.0.0",
+    "@typeservice/decorator": "^1.0.1",
+    "@typeservice/exception": "^1.0.1",
     "inversify": "^6.0.1",
     "koa": "^2.13.4",
     "koa-router-find-my-way": "^5.0.0"
