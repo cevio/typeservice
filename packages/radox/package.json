@@ -1,0 +1,36 @@
+{
+  "name": "@typeservice/radox",
+  "version": "1.0.0",
+  "description": "widget:radox",
+  "author": "shenyunjie ",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/radox",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@types/node-zookeeper-client": "^0.2.8",
+    "@types/ws": "^8.2.2",
+    "@typeservice/decorator": "^1.0.0",
+    "@typeservice/exception": "^1.0.0",
+    "@typeservice/message": "^1.0.0",
+    "inversify": "^6.0.1",
+    "load-balancers": "^1.3.52",
+    "node-zookeeper-client": "^1.1.1",
+    "reflect-metadata": "^0.1.13",
+    "ws": "^8.4.0"
+  }
+}
