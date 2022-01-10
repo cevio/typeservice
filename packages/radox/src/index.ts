@@ -24,7 +24,7 @@ export * from './decorators';
 export * from './exceptions';
 
 export class Radox extends EventEmitter {
-  public  readonly container = new Container();
+  public  readonly container: Container;
   public  readonly zookeeper: ZooKeeper;
   public  readonly namespaces = new Map<string, TNameSpace>();
   private readonly server: WebSocketServer;
@@ -41,6 +41,7 @@ export class Radox extends EventEmitter {
     this.setMaxListeners(Infinity);
     this.balance = props.balance;
     this.logger = props.logger;
+    this.container = props.container;
     this.server = new WebSocketServer({ port: props.port, maxPayload: Infinity });
     this.zookeeper = new ZooKeeper(props.zookeeper, props.port);
     this.zookeeper.on('change', (path: string, res: string[] = []) => this.onChange(path, res));

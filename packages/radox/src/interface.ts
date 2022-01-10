@@ -1,10 +1,11 @@
-import { interfaces } from "inversify";
+import { interfaces, Container } from "inversify";
 
 export interface RadoxProps {
   zookeeper: string,
   port: number,
   balance?: 'rdm' | 'hit' | string,
-  logger?: any
+  logger?: any,
+  container: Container,
 }
 
 export interface TNameSpace {
