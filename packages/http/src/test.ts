@@ -20,6 +20,7 @@ import {
 class TestMiddleware implements HTTPMiddlewareImplements {
   public async use(ctx: Context, next: Next) {
     // console.log('in Middleware:', ctx.path);
+    console.log(ctx.state);
     await next();
   }
 }
