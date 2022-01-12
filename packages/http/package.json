@@ -22,9 +22,11 @@
     "access": "public"
   },
   "dependencies": {
+    "@types/cookies": "^0.7.7",
     "@types/koa": "^2.13.4",
     "@typeservice/decorator": "^1.0.1",
     "@typeservice/exception": "^1.0.1",
+    "cookies": "^0.8.0",
     "inversify": "^6.0.1",
     "koa": "^2.13.4",
     "koa-router-find-my-way": "^5.0.0"

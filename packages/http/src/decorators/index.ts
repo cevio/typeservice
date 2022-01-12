@@ -7,3 +7,4 @@ export * from './HTTPRequestHeader';
 export * from './HTTPRequestBody';
 export * from './HTTPRequestParam';
 export * from './HTTPRequestState';
+export * from './HTTPCookie';
