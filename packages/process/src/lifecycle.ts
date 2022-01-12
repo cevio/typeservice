@@ -1,5 +1,5 @@
 export type EffectInput<T> = (schema?: T) => void | EffectOutput | Promise<void> | Promise<EffectOutput>;
-export type EffectOutput = () => void | Promise<void>;
+export type EffectOutput = () => any | Promise<any>;
 
 export class LifeCycle<T> {
   private readonly stacks: EffectInput<T>[] = [];
