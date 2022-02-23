@@ -7,4 +7,4 @@ export function HTTPControllerMiddleware(middleware: THTTPMiddleware) {
   return ClassMetaCreator.unshift(HTTPControllerMiddleware.namespace, buildMiddleware(middleware));
 }
 
-HTTPControllerMiddleware.namespace = Symbol('HTTP:CONTROLLER:MIDDLEWARE');
+HTTPControllerMiddleware.namespace = 'HTTP:CONTROLLER:MIDDLEWARE';

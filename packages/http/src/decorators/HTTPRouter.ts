@@ -11,4 +11,4 @@ export function HTTPRouter(options: THTTPRouterMetaState) {
   return MethodMetaCreator.define(HTTPRouter.namespace, options);
 }
 
-HTTPRouter.namespace = Symbol('HTTP:ROUTER');
+HTTPRouter.namespace = 'HTTP:ROUTER';

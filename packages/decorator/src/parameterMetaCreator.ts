@@ -4,7 +4,7 @@ import { MethodMetaCreator } from './methodMetaCreator';
 type ParameterHandler<TContext = any, TResult = any> = (ctx: TContext, ...args: any[]) => TResult | Promise<TResult>;
 
 export class ParameterMetaCreator {
-  static namespace = Symbol('metadata.parameter.namespace');
+  static namespace = 'metadata.parameter.namespace';
   private readonly stacks: ParameterHandler<any>[] = [];
   public parent: MethodMetaCreator;
 

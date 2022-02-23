@@ -54,4 +54,4 @@ export function buildMiddleware(middleware: THTTPMiddleware) {
   }
 }
 
-HTTPMiddleware.namespace = Symbol('HTTP:MIDDLEWARE');
+HTTPMiddleware.namespace = 'HTTP:MIDDLEWARE';

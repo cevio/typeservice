@@ -30,7 +30,7 @@ export class ClassMetaNode {
 }
 
 export class ClassMetaCreator {
-	static namespace = Symbol('metadata.class.namespace');
+	static namespace = 'metadata.class.namespace';
 	public readonly stacks: Map<Object, ClassMetaNode> = new Map();
 	static instance(obj: Object) {
 		let meta: ClassMetaCreator;

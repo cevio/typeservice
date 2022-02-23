@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { ClassMetaNode } from './classMetaCreator';
 
 export class MethodMetaCreator {
-	static namespace = Symbol('metadata.method.namespace');
+	static namespace = 'metadata.method.namespace';
 	private readonly stacks: Map<string | symbol, any> = new Map();
 	public parent: ClassMetaNode;
 

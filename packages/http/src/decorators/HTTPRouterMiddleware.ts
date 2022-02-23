@@ -7,4 +7,4 @@ export function HTTPRouterMiddleware(middleware: THTTPMiddleware) {
   return MethodMetaCreator.unshift(HTTPRouterMiddleware.namespace, buildMiddleware(middleware));
 }
 
-HTTPRouterMiddleware.namespace = Symbol('HTTP:ROUTER:MIDDLEWARE');
+HTTPRouterMiddleware.namespace = 'HTTP:ROUTER:MIDDLEWARE';

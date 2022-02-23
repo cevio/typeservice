@@ -10,4 +10,4 @@ export function HTTPController() {
   )
 }
 
-HTTPController.namespace = Symbol('HTTP:CONTROLLER');
+HTTPController.namespace = 'HTTP:CONTROLLER';
