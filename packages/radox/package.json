@@ -1,6 +1,6 @@
 {
   "name": "@typeservice/radox",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "widget:radox",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/radox",
@@ -24,7 +24,7 @@
   "dependencies": {
     "@types/node-zookeeper-client": "^0.2.8",
     "@types/ws": "^8.2.2",
-    "@typeservice/decorator": "^1.0.1",
+    "@typeservice/decorator": "^1.0.2",
     "@typeservice/exception": "^1.0.1",
     "@typeservice/message": "^1.0.1",
     "inversify": "^6.0.1",

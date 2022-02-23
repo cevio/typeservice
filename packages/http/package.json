@@ -1,6 +1,6 @@
 {
   "name": "@typeservice/http",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "widget:http",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/http",
@@ -24,7 +24,7 @@
   "dependencies": {
     "@types/cookies": "^0.7.7",
     "@types/koa": "^2.13.4",
-    "@typeservice/decorator": "^1.0.1",
+    "@typeservice/decorator": "^1.0.2",
     "@typeservice/exception": "^1.0.1",
     "cookies": "^0.8.0",
     "inversify": "^6.0.1",
