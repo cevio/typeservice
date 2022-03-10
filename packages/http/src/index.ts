@@ -2,7 +2,7 @@ import Koa, { Context, Next } from 'koa';
 import * as Router from 'koa-router-find-my-way';
 import { interfaces, Container } from 'inversify';
 import { AnnotationMetaDataScan } from '@typeservice/decorator';
-import { HttpException } from '@typeservice/exception';
+import { HttpBadRequestException, HttpException, HttpNotFoundException } from '@typeservice/exception';
 import { transformMiddlewares } from './middleware';
 import { 
   HTTPController, 
@@ -20,7 +20,18 @@ export * from './middleware';
 export * from 'inversify';
 
 export class HTTP extends Koa {
-  private readonly router = Router();
+  private readonly router = Router({
+    maxParamLength: Infinity,
+    caseSensitive: true,
+    ignoreTrailingSlash: true,
+    allowUnsafeRegex: true,
+    defaultRoute: () => {
+      throw new HttpNotFoundException();
+    },
+    onBadUrl: () => {
+      throw new HttpBadRequestException();
+    }
+  });
 
   constructor(private readonly container: Container) {
     super();
