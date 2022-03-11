@@ -9,3 +9,4 @@ export * from './HTTPRequestParam';
 export * from './HTTPRequestState';
 export * from './HTTPCookie';
 export * from './HTTPRequestEmpty';
+export * from './HTTPRequestIP';
