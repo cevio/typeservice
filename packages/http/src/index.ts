@@ -1,9 +1,11 @@
-import Koa, { Context, Next } from 'koa';
+import { createServer, Server } from 'http';
+import Koa, { Context, Next, Middleware } from 'koa';
 import * as Router from 'koa-router-find-my-way';
 import { interfaces, Container } from 'inversify';
 import { AnnotationMetaDataScan } from '@typeservice/decorator';
 import { HttpBadRequestException, HttpException, HttpNotFoundException } from '@typeservice/exception';
 import { transformMiddlewares } from './middleware';
+import { createContext } from '@typeservice/process';
 import { 
   HTTPController, 
   HTTPRouter, 
@@ -94,5 +96,53 @@ export class HTTP extends Koa {
       destroyCallbacks.push(() => this.removeController(routerMeta.methods, routerMeta.pathname));
     });
     return () => destroyCallbacks.forEach(callback => callback());
+  }
+}
+
+export const CONTEXT_HTTP_APPLICATION = createContext<HTTP>(undefined);
+export const CONTEXT_HTTP_SERVER = createContext<Server>(undefined);
+export type TPortGetter = () => number | Promise<number>;
+export interface TCreateHTTPServerProps {
+  container: Container,
+  port: number | TPortGetter,
+  services: interfaces.Newable<any>[],
+  middlewares?: Middleware[],
+  timeout?: number,
+  bootstrap?: (port: number) => any | Promise<any>,
+  destroyed?: (port: number) => any | Promise<any>,
+}
+
+export function createHTTPServer(configs: TCreateHTTPServerProps) {
+  return async () => {
+    const http = new HTTP(configs.container);
+    if (configs.middlewares && configs.middlewares.length) {
+      configs.middlewares.forEach(middleware => http.use(middleware));
+    }
+    http.use(http.routes())
+    const server = createServer(http.callback());
+    if (configs.timeout !== undefined) {
+      server.setTimeout(configs.timeout);
+    }
+    if (configs.services && configs.services.length) {
+      configs.services.forEach(service => http.createService(service));
+    }
+    const port = typeof configs.port === 'function'
+      ? await Promise.resolve((configs.port as TPortGetter)())
+      : configs.port;
+    await new Promise<void>((resolve, reject) => {
+      server.listen(port, (err?: any) => {
+        if (err) return reject(err);
+        resolve();
+      })
+    })
+    CONTEXT_HTTP_APPLICATION.setContext(http);
+    CONTEXT_HTTP_SERVER.setContext(server);
+    if (configs.bootstrap) await Promise.resolve(configs.bootstrap(port));
+    return async () => {
+      server.close();
+      CONTEXT_HTTP_APPLICATION.setContext(undefined);
+      CONTEXT_HTTP_SERVER.setContext(undefined);
+      if (configs.destroyed) await Promise.resolve(configs.destroyed(port));
+    }
   }
 }
