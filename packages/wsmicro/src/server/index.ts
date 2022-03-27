@@ -115,7 +115,6 @@ export class Server extends EventEmitter {
     }
     const chunks = this.subscribes.get(key);
     chunks.add(socket);
-    console.log('size', chunks.size)
   }
 
   public unsubscribe(intername: string, method: string, socket: Socket) {

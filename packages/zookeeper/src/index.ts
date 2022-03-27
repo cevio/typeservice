@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { UrlWithParsedQuery, format, parse } from 'url';
 import { createClient, Client, State, CreateMode, Event, Stat } from 'node-zookeeper-client';
 import { TRegistry } from '@typeservice/wsmicro';
-import { localhost } from '@typeservice/process';
+import { localhost, createContext } from '@typeservice/process';
 import { ZookeeperOfflineException } from './offlineException';
 import { ZookeeperPathNotFoundException } from './NotFoundException';
 
@@ -181,5 +181,30 @@ export class ZooKeeper extends EventEmitter implements TRegistry {
     const ex = new Event(4, 'NODE_CHILDREN_CHANGED', key);
     const pathes = await this.watcher(ex, !!watch ? res => watch(_format(res)) : undefined);
     return _format(pathes);
+  }
+}
+
+export interface TCreateZookeeperServerProps {
+  path: string | (() => string | Promise<string>),
+  bootstrap?: (path: string) => any | Promise<any>,
+  destroyed?: (path: string) => any | Promise<any>,
+}
+
+export const CONTEXT_ZOOKEEPER = createContext<ZooKeeper>(undefined);
+
+export function createZookeeperServer(configs: TCreateZookeeperServerProps) {
+  return async () => {
+    const path = typeof configs.path === 'function'
+      ? await Promise.resolve((configs.path as () => string | Promise<string>)())
+      : configs.path;
+    const zookeeper = new ZooKeeper(path);
+    await zookeeper.connect();
+    CONTEXT_ZOOKEEPER.setContext(zookeeper);
+    if (configs.bootstrap) await Promise.resolve(configs.bootstrap(path));
+    return async () => {
+      zookeeper.close();
+      CONTEXT_ZOOKEEPER.setContext(undefined);
+      if (configs.destroyed) await Promise.resolve(configs.destroyed(path));
+    }
   }
 }

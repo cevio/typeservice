@@ -1,33 +1,23 @@
 import { Container } from 'inversify';
 import { createProcess } from '@typeservice/process';
-import { ZooKeeper } from '@typeservice/zookeeper';
-import { MicroService } from '@typeservice/wsmicro';
+import { createZookeeperServer, CONTEXT_ZOOKEEPER } from '@typeservice/zookeeper';
+import { createWSMricoServer } from '@typeservice/wsmicro';
 import { A } from './services';
 
 const port = 19652;
 const container = new Container();
-const zookeeper = new ZooKeeper('127.0.0.1:2181');
-const microservice = new MicroService({
-  container,
-  registry: zookeeper,
-  services: [A]
-})
 const [bootstrap, lifecycle] = createProcess(console.error);
 
 lifecycle
-  .createServer(createZookeeperServer)
-  .createServer(createMicroServer);
+  .createServer(createZookeeperServer({
+    path: '127.0.0.1:2181',
+    bootstrap: path => console.log('[Bootstrap]', 'zookeeper:', path),
+    destroyed: path => console.log('[destroyed]', 'zookeeper:', path),
+  }))
+  .createServer(createWSMricoServer({
+    container, port,
+    registry: () => CONTEXT_ZOOKEEPER.value,
+    services: [A],
+  }));
 
 bootstrap();
-
-async function createZookeeperServer() {
-  await zookeeper.connect();
-  console.log('Zookeeper is connected');
-  return () => zookeeper.close();
-}
-
-async function createMicroServer() {
-  await microservice.listen(port);
-  console.log('ws micro service on', port);
-  return () => microservice.close();
-}
