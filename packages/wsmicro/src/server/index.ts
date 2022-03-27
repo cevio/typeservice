@@ -115,6 +115,9 @@ export class Server extends EventEmitter {
     }
     const chunks = this.subscribes.get(key);
     chunks.add(socket);
+    const object = this.container.get(this.services.get(intername).ref);
+    const res = object[method]();
+    socket.publish(intername, method, res);
   }
 
   public unsubscribe(intername: string, method: string, socket: Socket) {
