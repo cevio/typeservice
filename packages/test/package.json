@@ -1,6 +1,6 @@
 {
   "name": "@typeservice/test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "widget:test",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/test",
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@typeservice/process": "^1.0.4",
-    "@typeservice/wsmicro": "^1.0.0",
-    "@typeservice/zookeeper": "^1.0.0"
+    "@typeservice/wsmicro": "^1.0.1",
+    "@typeservice/zookeeper": "^1.0.1"
   }
 }
