@@ -14,18 +14,18 @@ interface TCallbackState {
 
 interface TMessageState {
   id: number,
-  mode: 0 | 1, // 0 请求 1 响应
+  mode: 0 | 1 | 2 | 3 | 4, // 0 请求 1 响应 2 订阅 3 发布 4 取消订阅
   twoway?: boolean, // true 需要响应
   data: {
-    request?: {
-      command: string,
-      value: any[],
-    },
+    request?: any,
     response?: {
       data?: any,
       status: number,
       msg?: any[]
-    }
+    },
+    subscribe?: any[],
+    publish?: any[],
+    unsubscribe?: any[],
   },
 }
 
@@ -53,23 +53,56 @@ export class Messager extends Task {
     this.callbacks.clear();
   }
 
-  public send(command: string, value: any[] = []) {
+  public publish(...args: any[]) {
+    if (this.disabled) throw new MessageChannelCloseException();
+    this.sender({
+      id: 0,
+      mode: 3,
+      twoway: false,
+      data: {
+        publish: args,
+      }
+    })
+  }
+
+  public subscribe(...args: any[]) {
+    if (this.disabled) throw new MessageChannelCloseException();
+    this.sender({
+      id: 0,
+      mode: 2,
+      twoway: false,
+      data: {
+        subscribe: args,
+      }
+    })
+  }
+
+  public unsubscribe(...args: any[]) {
+    if (this.disabled) throw new MessageChannelCloseException();
+    this.sender({
+      id: 0,
+      mode: 4,
+      twoway: false,
+      data: {
+        unsubscribe: args,
+      }
+    })
+  }
+
+  public send(data: any) {
     if (this.disabled) throw new MessageChannelCloseException();
     this.sender({
       id: 0,
       mode: 0,
       twoway: false,
       data: {
-        request: {
-          command,
-          value,
-        }
+        request: data,
       }
     })
     this.last_write_time = Date.now();
   }
 
-  public sendback<T>(command: string, value: any[] = [], timeout: number = 15 * 60 * 1000) {
+  public sendback<T>(data: any, timeout: number = 15 * 60 * 1000) {
     if (this.disabled) return Promise.reject(new MessageChannelCloseException());
     let id = this.id++;
     if (id >= Number.MAX_SAFE_INTEGER) {
@@ -87,7 +120,7 @@ export class Messager extends Task {
       }
       const timer = setTimeout(() => {
         this.callbacks.delete(id);
-        _reject(new MessageTimeoutException(command, value, timeout));
+        _reject(new MessageTimeoutException(data, timeout));
       }, timeout);
       this.callbacks.set(id, {
         resolve: _resolve,
@@ -98,10 +131,7 @@ export class Messager extends Task {
         mode: 0,
         twoway: true,
         data: {
-          request: {
-            command,
-            value,
-          }
+          request: data,
         }
       });
       this.last_write_time = Date.now();
@@ -118,52 +148,70 @@ export class Messager extends Task {
 
       this.last_read_time = Date.now();
 
-      if (req.mode === 0) {
-        // 收到请求
-        this.emit(req.data.request.command, ...req.data.request.value)
-          .then((res: any) => {
-            if (req.twoway) {
-              this.sender({
-                id: req.id,
-                mode: 1,
-                twoway: false,
-                data: {
-                  response: {
-                    data: res,
-                    status: 200,
-                  }
-                }
-              })
-            }
-          })
-          .catch(e => {
-            if (req.twoway) {
-              this.sender({
-                id: req.id,
-                mode: 1,
-                twoway: false,
-                data: {
-                  response: {
-                    status: Exception.isException(e) ? e.code : 500,
-                    msg: Exception.isException(e) ? e.messages : [e.message],
-                  }
-                }
-              })
-            }
-          });
-      } else if (req.mode === 1) {
-        // 收到响应
-        if (req.id && this.callbacks.has(req.id)) {
-          const response = req.data.response;
-          const injection = this.callbacks.get(req.id);
-          this.callbacks.delete(req.id);
-          if (response.status === 200) {
-            injection.resolve(response.data);
-          } else {
-            injection.reject(new Exception(response.status, ...response.msg));
-          }
-        }
+      switch (req.mode) {
+        case 0: this._request(req); break;
+        case 1: this._response(req); break;
+        case 2: this._subscribe(req); break;
+        case 3: this._publish(req); break;
+        case 4: this._unsubscribe(req); break;
       }
     } 
+  }
+
+  private _request(req: TMessageState) {
+    this.emit('request', req.data).then((res: any) => {
+      if (req.twoway && !this.disabled) {
+        this.sender({
+          id: req.id,
+          mode: 1,
+          twoway: false,
+          data: {
+            response: {
+              data: res,
+              status: 200,
+            }
+          }
+        })
+      }
+    }).catch(e => {
+      if (req.twoway && !this.disabled) {
+        this.sender({
+          id: req.id,
+          mode: 1,
+          twoway: false,
+          data: {
+            response: {
+              status: Exception.isException(e) ? e.code : 500,
+              msg: Exception.isException(e) ? e.messages : [e.message],
+            }
+          }
+        })
+      }
+    });
+  }
+
+  private _response(req: TMessageState) {
+    if (req.id && this.callbacks.has(req.id)) {
+      const response = req.data.response;
+      const injection = this.callbacks.get(req.id);
+      this.callbacks.delete(req.id);
+      if (response.status === 200) {
+        injection.resolve(response.data);
+      } else {
+        injection.reject(new Exception(response.status, ...response.msg));
+      }
+    }
+  }
+
+  private _subscribe(req: TMessageState) {
+    this.emit('subscribe', ...req.data.subscribe);
+  }
+
+  private _publish(req: TMessageState) {
+    this.emit('publish', ...req.data.publish);
+  }
+
+  private _unsubscribe(req: TMessageState) {
+    this.emit('unsubscribe', ...req.data.unsubscribe);
   }
 }

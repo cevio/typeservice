@@ -1,7 +1,7 @@
 import { Exception } from '@typeservice/exception';
 
-export class RPCArgumentsEmptyException extends Exception {
+export class InterfaceNotFoundException extends Exception {
   constructor(...args: any[]) {
-    super(1003, ...args);
+    super(1004, ...args);
   }
 }

@@ -1,7 +1,7 @@
 import { Exception } from '@typeservice/exception';
 
-export class RPCZookeeperOfflineException extends Exception {
+export class RegistryNotMatchedException extends Exception {
   constructor(...args: any[]) {
-    super(1106, ...args);
+    super(1006, ...args);
   }
 }

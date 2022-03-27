@@ -1,0 +1,30 @@
+{
+  "name": "@typeservice/zookeeper",
+  "version": "1.0.0",
+  "description": "widget:zookeeper",
+  "author": "shenyunjie ",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/zookeeper",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@types/node-zookeeper-client": "^0.2.8",
+    "@typeservice/process": "^1.0.4",
+    "@typeservice/wsmicro": "^1.0.0",
+    "node-zookeeper-client": "^1.1.1"
+  }
+}

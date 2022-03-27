@@ -1,7 +1,7 @@
 import { Exception } from '@typeservice/exception';
 
-export class RPCInterfaceNotFoundException extends Exception {
+export class ConnectingException extends Exception {
   constructor(...args: any[]) {
-    super(1004, ...args);
+    super(1001, ...args);
   }
 }

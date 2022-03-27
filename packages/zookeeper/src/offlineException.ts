@@ -1,7 +1,7 @@
 import { Exception } from '@typeservice/exception';
 
-export class RPCAgentNotFoundException extends Exception {
+export class ZookeeperOfflineException extends Exception {
   constructor(...args: any[]) {
-    super(1104, ...args);
+    super(1107, ...args);
   }
 }

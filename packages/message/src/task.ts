@@ -1,5 +1,5 @@
 import { MessageUnknowCommandException } from "./exceptions";
-type TKey = string;
+type TKey = 'request' | 'response' | 'subscribe' | 'publish' | 'unsubscribe';
 type TOnmessageCallback = <T>(command: TKey, args: any[]) => T | Promise<T>;
 
 type TaskCallback<T> = (...args: any[]) => T | Promise<T>

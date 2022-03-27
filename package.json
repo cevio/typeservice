@@ -7,8 +7,8 @@
     "create": "node scripts/create.js",
     "build": "lerna run build",
     "load": "node scripts/load.js",
-    "npm": "npm run load npm index.ts config=../../../npm.config.json",
-    "dingtalk": "npm run load dingtalk"
+    "sa": "ts-node ./packages/test/src/index.ts",
+    "sb": "ts-node ./packages/test/src/invoke.ts"
   },
   "devDependencies": {
     "@types/koa-bodyparser": "^4.3.5",
