@@ -139,9 +139,9 @@ export class Messager extends Task {
   }
 
   public createReceiver() {
-    return (request: string | Buffer | TMessageState) => {
+    return (request: any) => {
       if (this.disabled) return;
-      request = Buffer.isBuffer(request) ? Buffer.from(request).toString() : request;
+      request = (!!Buffer && Buffer.isBuffer(request)) ? Buffer.from(request).toString() : request;
       const req = typeof request === 'string' 
         ? JSON.parse(request) as TMessageState
         : request;
