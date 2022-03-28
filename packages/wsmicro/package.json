@@ -1,6 +1,6 @@
 {
   "name": "@typeservice/wsmicro",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "widget:wsmicro",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/wsmicro",
@@ -26,7 +26,7 @@
     "@types/ws": "^8.2.2",
     "@typeservice/decorator": "^1.0.2",
     "@typeservice/exception": "^1.0.1",
-    "@typeservice/message": "^1.0.3",
+    "@typeservice/message": "^1.0.4",
     "@typeservice/process": "^1.0.4",
     "@vue/reactivity": "^3.2.31",
     "inversify": "^6.0.1",
