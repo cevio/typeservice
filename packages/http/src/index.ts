@@ -108,6 +108,7 @@ export interface TCreateHTTPServerProps {
   services: interfaces.Newable<any>[],
   middlewares?: Middleware[],
   timeout?: number,
+  onCreated?: (server: Server) => any | Promise<any>,
   bootstrap?: (port: number) => any | Promise<any>,
   destroyed?: (port: number) => any | Promise<any>,
 }
@@ -120,12 +121,14 @@ export function createHTTPServer(configs: TCreateHTTPServerProps) {
     }
     http.use(http.routes())
     const server = createServer(http.callback());
+    CONTEXT_HTTP_SERVER.setContext(server);
     if (configs.timeout !== undefined) {
       server.setTimeout(configs.timeout);
     }
     if (configs.services && configs.services.length) {
       configs.services.forEach(service => http.createService(service));
     }
+    if (configs.onCreated) await Promise.resolve(configs.onCreated(server));
     const port = typeof configs.port === 'function'
       ? await Promise.resolve((configs.port as TPortGetter)())
       : configs.port;
@@ -136,7 +139,6 @@ export function createHTTPServer(configs: TCreateHTTPServerProps) {
       })
     })
     CONTEXT_HTTP_APPLICATION.setContext(http);
-    CONTEXT_HTTP_SERVER.setContext(server);
     if (configs.bootstrap) await Promise.resolve(configs.bootstrap(port));
     return async () => {
       server.close();
