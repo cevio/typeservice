@@ -1,0 +1,29 @@
+{
+  "name": "@typeservice/socket.io",
+  "version": "1.0.0",
+  "description": "widget:socket.io",
+  "author": "shenyunjie ",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/socket.io",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@typeservice/message": "^1.0.5",
+    "@typeservice/wsmicro": "^1.0.6",
+    "socket.io": "^4.4.1"
+  }
+}

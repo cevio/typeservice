@@ -1,0 +1,30 @@
+{
+  "name": "@typeservice/socket.io-client",
+  "version": "1.0.0",
+  "description": "widget:socket.io-client",
+  "author": "shenyunjie ",
+  "homepage": "https://github.com/cevio/nppm/tree/master/packages/socket.io-client",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [
+    "npm"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf ./dist && tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@types/react": "^17.0.43",
+    "@typeservice/message": "^1.0.5",
+    "react": "^17.0.2",
+    "socket.io-client": "^4.4.1"
+  }
+}
