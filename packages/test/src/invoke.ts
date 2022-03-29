@@ -22,7 +22,21 @@ lifecycle
   }))
   .createServer(createHTTPServer);
 
-bootstrap();
+bootstrap().then(() => {
+  setTimeout(() => {
+    const micro = CONTEXT_WS_MICROSERVER.value;
+    micro.subscribe({
+      interface: 'com.test.a',
+      method: 'use'
+    }, (res) => {
+      console.log('tip:', res)
+    }).then((unsubscribe) => {
+      setTimeout(() => {
+        unsubscribe()
+      }, 10000)
+    })
+  }, 3000)
+});;
 
 async function createHTTPServer() {
   const microservice = CONTEXT_WS_MICROSERVER.value;

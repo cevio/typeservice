@@ -11,7 +11,7 @@ export class Client extends EventEmitter {
   private status: -1 | 0 | 1 | 2 = 0;
   private connection: Websocket;
 
-  private readonly subscribes = new Map<string, (res: any) => void>();
+  private readonly subscribes = new Map<string, Set<(res: any) => void>>();
 
   constructor(
     private readonly host: string, 
@@ -24,7 +24,10 @@ export class Client extends EventEmitter {
     this.message.on('publish', (intername: string, method: string, res: any) => {
       const key = this.createSubscribeKey(intername, method);
       if (this.subscribes.has(key)) {
-        this.subscribes.get(key)(res);
+        const callbacks = this.subscribes.get(key);
+        for (const callback of callbacks.values()) {
+          callback(res);
+        }
       }
     })
   }
@@ -42,7 +45,7 @@ export class Client extends EventEmitter {
     this.status = 0;
   }
 
-  private createConnection(callback?: () => void) {
+  private createConnection() {
     if (this.status === 0) {
       this.status = 1;
       const oper = operation(this.configs);
@@ -72,9 +75,11 @@ export class Client extends EventEmitter {
           this.status = 2;
           this.connection = ws;
           this.emit('open');
-          for (const [key, callback] of this.subscribes) {
+          for (const [key, callbacks] of this.subscribes) {
             const sp = key.split(':');
-            this.subscribe(sp[0], sp[1], callback);
+            for (const callback of callbacks.values()) {
+              this.subscribe(sp[0], sp[1], callback);
+            }
           }
         })
       })
@@ -173,10 +178,22 @@ export class Client extends EventEmitter {
         resolve, reject,
       })
       this.createCheckingStatus();
-    }).then((res) => {
+    }).then(() => {
       const key = this.createSubscribeKey(intername, method);
-      this.subscribes.set(key, callback);
-      return res;
+      if (!this.subscribes.has(key)) this.subscribes.set(key, new Set());
+      const callbacks = this.subscribes.get(key);
+      if (!callbacks.has(callback)) {
+        callbacks.add(callback);
+      }
+      return async () => {
+        if (callbacks.has(callback)) {
+          callbacks.delete(callback);
+        }
+        if (!callbacks.size) {
+          this.subscribes.delete(key);
+          await this.unsubscribe(intername, method);
+        }
+      };
     })
   }
 

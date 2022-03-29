@@ -18,7 +18,7 @@ export class Socket extends EventEmitter {
     const handler = this.message.createReceiver();
     this.connection.on('message', handler);
     this.message.setSender(data => this.connection.send(JSON.stringify(data)));
-    this.message.on('request', (state: { request: TCommunication }) => this.server.execute(state.request.interface, state.request.method, state.request.arguments));
+    this.message.on('request', (state: TCommunication) => this.server.execute(state.interface, state.method, state.arguments));
     this.message.on('subscribe', (intername: string, method: string) => this.server.subscribe(intername, method, this));
     this.message.on('unsubscribe', (intername: string, method: string) => this.server.unsubscribe(intername, method, this));
     this.connection.on('close', () => {

@@ -1,7 +1,7 @@
 import { Container } from 'inversify';
 import { createProcess } from '@typeservice/process';
 import { createZookeeperServer, CONTEXT_ZOOKEEPER } from '@typeservice/zookeeper';
-import { createWSMricoServer } from '@typeservice/wsmicro';
+import { createWSMricoServer, CONTEXT_WS_MICROSERVER } from '@typeservice/wsmicro';
 import { A } from './services';
 
 const port = 19652;

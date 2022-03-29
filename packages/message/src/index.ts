@@ -159,7 +159,7 @@ export class Messager extends Task {
   }
 
   private _request(req: TMessageState) {
-    this.emit('request', req.data).then((res: any) => {
+    this.emit('request', req.data.request).then((res: any) => {
       if (req.twoway && !this.disabled) {
         this.sender({
           id: req.id,
