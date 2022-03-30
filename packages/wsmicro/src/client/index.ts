@@ -5,13 +5,17 @@ import { Messager } from '@typeservice/message';
 import { TRetryConfigs, TClientStackState } from './interface';
 import { TCommunication } from '../server/interface';
 export * from './interface';
+
+type TSubscribeFeedback = (res: any) => void;
+type TUnSubscribeFeedback = () => Promise<void>;
+
 export class Client extends EventEmitter {
   private readonly message = new Messager();
   private readonly stacks = new Set<TClientStackState<TCommunication | string[]>>();
   private status: -1 | 0 | 1 | 2 = 0;
   private connection: Websocket;
 
-  private readonly subscribes = new Map<string, Set<(res: any) => void>>();
+  public readonly subscribes = new Map<string, Map<TSubscribeFeedback, TUnSubscribeFeedback>>();
 
   constructor(
     private readonly host: string, 
@@ -25,7 +29,7 @@ export class Client extends EventEmitter {
       const key = this.createSubscribeKey(intername, method);
       if (this.subscribes.has(key)) {
         const callbacks = this.subscribes.get(key);
-        for (const callback of callbacks.values()) {
+        for (const callback of callbacks.keys()) {
           callback(res);
         }
       }
@@ -75,12 +79,7 @@ export class Client extends EventEmitter {
           this.status = 2;
           this.connection = ws;
           this.emit('open');
-          for (const [key, callbacks] of this.subscribes) {
-            const sp = key.split(':');
-            for (const callback of callbacks.values()) {
-              this.subscribe(sp[0], sp[1], callback);
-            }
-          }
+          this.resubscribe();
         })
       })
     }
@@ -180,21 +179,35 @@ export class Client extends EventEmitter {
       this.createCheckingStatus();
     }).then(() => {
       const key = this.createSubscribeKey(intername, method);
-      if (!this.subscribes.has(key)) this.subscribes.set(key, new Set());
+      if (!this.subscribes.has(key)) this.subscribes.set(key, new Map());
       const callbacks = this.subscribes.get(key);
       if (!callbacks.has(callback)) {
-        callbacks.add(callback);
+        const rollback = async () => {
+          if (callbacks.has(callback)) {
+            callbacks.delete(callback);
+          }
+          if (!callbacks.size) {
+            this.subscribes.delete(key);
+            await this.unsubscribe(intername, method);
+          }
+        }
+        callbacks.set(callback, rollback);
       }
-      return async () => {
-        if (callbacks.has(callback)) {
-          callbacks.delete(callback);
-        }
-        if (!callbacks.size) {
-          this.subscribes.delete(key);
-          await this.unsubscribe(intername, method);
-        }
-      };
+      return callbacks.get(callback);
     })
+  }
+
+  public resubscribe(feedback?: (intername: string, method: string, callback: (res: any) => void) => Promise<TUnSubscribeFeedback>) {
+    for (const [key, callbacks] of this.subscribes.entries()) {
+      const sp = key.split(':');
+      for (const callback of callbacks.keys()) {
+        if (feedback) {
+          feedback(sp[0], sp[1], callback);
+        } else {
+          this.subscribe(sp[0], sp[1], callback);
+        }
+      }
+    }
   }
 
   public unsubscribe(intername: string, method: string) {

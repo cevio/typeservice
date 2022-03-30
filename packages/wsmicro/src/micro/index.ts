@@ -38,7 +38,15 @@ export class MicroService {
     const key = createClientKey(host, port);
     if (!this.clients.has(key)) {
       const client = new Client(host, port, this.retryConfigs);
-      client.on('end', () => this.clients.delete(key));
+      client.on('end', () => {
+        this.clients.delete(key);
+        client.resubscribe((intername, method, feedback) => {
+          return this.subscribe({
+            interface: intername,
+            method: method,
+          }, feedback);
+        })
+      });
       this.clients.set(key, client);
     }
     return this.clients.get(key);
