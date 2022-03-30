@@ -1,6 +1,6 @@
 {
   "name": "@typeservice/zookeeper",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "widget:zookeeper",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/zookeeper",
@@ -24,7 +24,7 @@
   "dependencies": {
     "@types/node-zookeeper-client": "^0.2.8",
     "@typeservice/process": "^1.0.4",
-    "@typeservice/wsmicro": "^1.0.6",
+    "@typeservice/wsmicro": "^1.0.7",
     "node-zookeeper-client": "^1.1.1"
   }
 }

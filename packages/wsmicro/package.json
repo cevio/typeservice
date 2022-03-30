@@ -1,6 +1,6 @@
 {
   "name": "@typeservice/wsmicro",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "widget:wsmicro",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/wsmicro",
@@ -24,7 +24,7 @@
   "dependencies": {
     "@types/retry": "^0.12.1",
     "@types/ws": "^8.2.2",
-    "@typeservice/decorator": "^1.0.2",
+    "@typeservice/decorator": "^1.0.3",
     "@typeservice/exception": "^1.0.1",
     "@typeservice/message": "^1.0.5",
     "@typeservice/process": "^1.0.4",
