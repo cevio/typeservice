@@ -1,5 +1,5 @@
-import { ClassMetaCreator } from '@typeservice/decorator';
-import { injectable } from 'inversify';
+import { ClassMetaCreator, injectable } from '@typeservice/decorator';
+// import { injectable } from 'inversify';
 
 export type THTTPControllerMetaState = boolean;
 

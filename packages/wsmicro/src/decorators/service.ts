@@ -1,5 +1,5 @@
-import { ClassMetaCreator } from '@typeservice/decorator';
-import { injectable } from 'inversify';
+import { ClassMetaCreator, injectable } from '@typeservice/decorator';
+// import { injectable } from 'inversify';
 export const ServiceNameSpace = 'Service';
 export function Service(namespace: string) {
   if (!namespace) throw new Error('@Service arguments must be a string')
