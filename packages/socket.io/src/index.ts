@@ -10,7 +10,7 @@ export const CONTEXT_WEBSOCKET = createContext<Server>();
 export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, stacks: Set<Messager> }> {
   constructor(
     private readonly micro: MicroService, 
-    private readonly configs?: ServerOptions
+    private readonly configs?: Partial<ServerOptions>
   ) {
     super();
   }
