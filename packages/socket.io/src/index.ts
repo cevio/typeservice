@@ -3,7 +3,7 @@ import { Socket, Server, ServerOptions } from 'socket.io';
 import { Messager } from '@typeservice/message';
 import { createContext } from '@typeservice/process';
 import { MicroService, TCommunication, TMicroServiceRequestProps } from '@typeservice/wsmicro';
-import { Exception } from '../../message/node_modules/@typeservice/exception/dist';
+import { Exception } from '@typeservice/exception';
 
 export const CONTEXT_WEBSOCKET = createContext<Server>();
 
