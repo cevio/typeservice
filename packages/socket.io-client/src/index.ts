@@ -1,15 +1,16 @@
 import { EventEmitter } from 'events';
 import { useCallback, useEffect } from 'react';
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import { Messager } from '@typeservice/message';
 
 export class WebSocket extends EventEmitter {
-  private readonly socket = io();
+  private readonly socket: Socket;
   private readonly message = new Messager();
   private readonly stacks = new Map<string, Set<(r: any) => void>>();
-  constructor() {
+  constructor(url?: string) {
     super();
     this.setMaxListeners(+Infinity);
+    this.socket = io(url);
     this.socket.on('faild', (...args) => this.emit('faild', ...args));
     this.socket.on('success', (...args: any[]) => {
       const handler = this.message.createReceiver();
