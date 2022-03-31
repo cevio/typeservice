@@ -1,10 +1,34 @@
-import { Socket } from 'socket.io';
+import { Server as HttpServer } from 'http';
+import { Socket, Server, ServerOptions } from 'socket.io';
 import { Messager } from '@typeservice/message';
+import { createContext } from '@typeservice/process';
 import { MicroService, TCommunication, TMicroServiceRequestProps } from '@typeservice/wsmicro';
+import { Exception } from '../../message/node_modules/@typeservice/exception/dist';
+
+export const CONTEXT_WEBSOCKET = createContext<Server>();
 
 export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, stacks: Set<Messager> }> {
-  constructor(private readonly micro: MicroService) {
+  constructor(
+    private readonly micro: MicroService, 
+    private readonly configs?: ServerOptions
+  ) {
     super();
+  }
+
+  public createWebSocketServer<T = any>(server: HttpServer, callback: (client: Socket) => T | Promise<T>) {
+    const io = new Server(server, this.configs);
+    CONTEXT_WEBSOCKET.setContext(io);
+    io.on('connection', client => {
+      Promise.resolve(callback(client))
+        .then((res: T) => {
+          this.createCommunication(client, registries => registries[0])
+          client.emit('success', res);
+        })
+        .catch(e => {
+          client.emit('faild', Exception.isException(e) ? e.status : 500, e.message);
+          client.disconnect();
+        })
+    });
   }
 
   public createCommunication(
