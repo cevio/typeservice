@@ -7,7 +7,7 @@ import { Exception } from '@typeservice/exception';
 
 export const CONTEXT_WEBSOCKET = createContext<Server>();
 
-export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, stacks: Set<Messager> }> {
+export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, stacks: Set<Messager>, value: any }> {
   constructor(
     private readonly micro: MicroService, 
     private readonly configs?: Partial<ServerOptions>
@@ -87,6 +87,8 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
           res => this.boardCastClients(intername, method, res),
         );
         obj.unsubscribe = unsubscribe;
+      } else {
+        message.publish([intername, method, obj.value]);
       }
     })
   }
@@ -111,8 +113,9 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
   private boardCastClients<T>(intername: string, method: string, state: T) {
     const key = intername + ':' + method;
     if (this.has(key)) {
-      const { stacks } = this.get(key);
-      for (const client of stacks.values()) {
+      const obj = this.get(key);
+      obj.value = state;
+      for (const client of obj.stacks.values()) {
         client.publish([intername, method, state]);
       }
     }
