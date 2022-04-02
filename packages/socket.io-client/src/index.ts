@@ -16,7 +16,8 @@ export class WebSocket extends EventEmitter {
       const handler = this.message.createReceiver();
       this.message.setSender(data => this.socket.emit('request', data));
       this.socket.on('response', handler);
-      this.message.on('publish', (intername: string, method: string, res: any) => {
+      this.message.on('publish', (state: [string, string, any]) => {
+        const [intername, method, res] = state;
         const key = intername + ':' + method;
         if (this.stacks.has(key)) {
           const callbacks = this.stacks.get(key);
@@ -34,7 +35,7 @@ export class WebSocket extends EventEmitter {
     method: string, 
     arguments: any[],
   }, timeout?: number) {
-    const res = await this.message.sendback(options, timeout);
+    const res = await this.message.sendback([options.interface, options.method, options.arguments], timeout);
     return res as T;
   }
 
@@ -48,7 +49,7 @@ export class WebSocket extends EventEmitter {
     if (!chunks.has(callback)) {
       chunks.add(callback);
     }
-    this.message.subscribe(options.interface, options.method);
+    this.message.subscribe([options.interface, options.method]);
     return () => {
       if (this.stacks.has(key)) {
         const chunks = this.stacks.get(key);
@@ -67,7 +68,7 @@ export class WebSocket extends EventEmitter {
     interface: string, 
     method: string,
   }) {
-    return this.message.unsubscribe(options.interface, options.method);
+    return this.message.unsubscribe([options.interface, options.method]);
   }
 
   public useSubscribe<T>(

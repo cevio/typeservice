@@ -11,7 +11,7 @@ type TUnSubscribeFeedback = () => Promise<void>;
 
 export class Client extends EventEmitter {
   private readonly message = new Messager();
-  private readonly stacks = new Set<TClientStackState<TCommunication | string[]>>();
+  private readonly stacks = new Set<TClientStackState<any[]>>();
   private status: -1 | 0 | 1 | 2 = 0;
   private connection: Websocket;
 
@@ -25,7 +25,8 @@ export class Client extends EventEmitter {
     super();
     this.on('open', () => this.executeSuccess());
     this.on('close', (e: any) => this.executeError(e));
-    this.message.on('publish', (intername: string, method: string, res: any) => {
+    this.message.on('publish', (data: [string, string, any]) => {
+      const [intername, method, res] = data;
       const key = this.createSubscribeKey(intername, method);
       if (this.subscribes.has(key)) {
         const callbacks = this.subscribes.get(key);
@@ -92,24 +93,20 @@ export class Client extends EventEmitter {
     }
   }
 
-  private execute(state: TClientStackState<TCommunication | string[]>) {
+  private execute(state: TClientStackState<any[]>) {
     switch (state.type) {
-      case 0:
+      case 1:
         if (state.backable) {
-          this.message.sendback(state.data, state.timeout)
-            .then(state.resolve)
-            .catch(state.reject);
+          this.message.sendback(state.data, state.timeout).then(state.resolve).catch(state.reject);
         } else {
           this.trySync(state, () => this.message.send(state.data));
         }
         break;
       case 2:
-        const subscribeArgs = state.data as string[];
-        this.trySync(state, () => this.message.subscribe(...subscribeArgs));
+        this.message.subscribe(state.data, state.timeout).then(state.resolve).catch(state.reject);
         break;
-      case 4:
-        const unsubscribeArgs = state.data as string[];
-        this.trySync(state, () => this.message.unsubscribe(...unsubscribeArgs));
+      case 3:
+        this.message.unsubscribe(state.data, state.timeout).then(state.resolve).catch(state.reject);
         break;
     }
   }
@@ -139,12 +136,8 @@ export class Client extends EventEmitter {
   public send(intername: string, method: string, args: any[]) {
     return new Promise((resolve, reject) => {
       this.stacks.add({
-        type: 0,
-        data: {
-          interface: intername,
-          method,
-          arguments: args
-        },
+        type: 1,
+        data: [intername, method, args],
         backable: false,
         resolve, reject,
       })
@@ -155,12 +148,8 @@ export class Client extends EventEmitter {
   public sendback<T>(intername: string, method: string, args: any[], timeout?: number) {
     return new Promise<T>((resolve, reject) => {
       this.stacks.add({
-        type: 0,
-        data: {
-          interface: intername,
-          method,
-          arguments: args
-        },
+        type: 1,
+        data: [intername, method, args],
         backable: true,
         timeout, resolve, reject,
       })
@@ -173,7 +162,6 @@ export class Client extends EventEmitter {
       this.stacks.add({
         type: 2,
         data: [intername, method],
-        backable: false,
         resolve, reject,
       })
       this.createCheckingStatus();
@@ -197,14 +185,23 @@ export class Client extends EventEmitter {
     })
   }
 
-  public resubscribe(feedback?: (intername: string, method: string, callback: (res: any) => void) => Promise<TUnSubscribeFeedback>) {
+  public resubscribe(
+    feedback?: (intername: string, method: string, callback: (res: any) => void) => Promise<TUnSubscribeFeedback>, 
+    onError?: (e: any) => void
+  ) {
     for (const [key, callbacks] of this.subscribes.entries()) {
       const sp = key.split(':');
       for (const callback of callbacks.keys()) {
         if (feedback) {
-          feedback(sp[0], sp[1], callback);
+          feedback(sp[0], sp[1], callback).catch(e => {
+            if (onError) return onError(e);
+            this.emit('error', e);
+          });
         } else {
-          this.subscribe(sp[0], sp[1], callback);
+          this.subscribe(sp[0], sp[1], callback).catch(e => {
+            if (onError) return onError(e);
+            this.emit('error', e);
+          });
         }
       }
     }
@@ -217,9 +214,8 @@ export class Client extends EventEmitter {
     }
     return new Promise((resolve, reject) => {
       this.stacks.add({
-        type: 4,
+        type: 3,
         data: [intername, method],
-        backable: false,
         resolve, reject,
       })
       this.createCheckingStatus();

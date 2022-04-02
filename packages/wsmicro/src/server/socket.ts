@@ -3,7 +3,6 @@ import { IncomingMessage } from 'http';
 import { EventEmitter } from 'events';
 import { Messager } from '@typeservice/message';
 import { Server } from '.';
-import { TCommunication } from './interface';
 export class Socket extends EventEmitter {
   private readonly message = new Messager();
   private readonly timer: NodeJS.Timer;
@@ -18,9 +17,9 @@ export class Socket extends EventEmitter {
     const handler = this.message.createReceiver();
     this.connection.on('message', handler);
     this.message.setSender(data => this.connection.send(JSON.stringify(data)));
-    this.message.on('request', (state: TCommunication) => this.server.execute(state.interface, state.method, state.arguments));
-    this.message.on('subscribe', (intername: string, method: string) => this.server.subscribe(intername, method, this));
-    this.message.on('unsubscribe', (intername: string, method: string) => this.server.unsubscribe(intername, method, this));
+    this.message.on('request', (data: [string, string, any[]]) => this.server.execute(data[0], data[1], data[2]));
+    this.message.on('subscribe', (data: [string, string]) => this.server.subscribe(data[0], data[1], this));
+    this.message.on('unsubscribe', (data: [string, string]) => this.server.unsubscribe(data[0], data[1], this));
     this.connection.on('close', () => {
       this.connection.off('message', handler);
       clearInterval(this.timer);
@@ -49,9 +48,10 @@ export class Socket extends EventEmitter {
 
   public close() {
     this.message.disable();
+    this.connection.close();
   }
 
   public publish<T = any>(intername: string, method: string, state: T) {
-    return this.message.publish(intername, method, state);
+    return this.message.publish([intername, method, state]);
   }
 }

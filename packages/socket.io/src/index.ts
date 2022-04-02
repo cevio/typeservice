@@ -56,16 +56,17 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
   }
 
   private createRequestMessage(message: Messager, strategy?: TMicroServiceRequestProps['strategy']) {
-    message.on('request', (state: TCommunication) => this.micro.sendback({
-      interface: state.interface,
-      method: state.method,
-      arguments: state.arguments,
+    message.on('request', (state: [string, string, any[]]) => this.micro.sendback({
+      interface: state[0],
+      method: state[1],
+      arguments: state[2],
       strategy
     }))
   }
 
   private createSubscribeMessage(message: Messager) {
-    message.on('subscribe', async (intername: string, method: string) => {
+    message.on('subscribe', async (state: [string, string]) => {
+      const [intername, method] = state;
       const key = intername + ':' + method;
       if (!this.has(key)) {
         const object = {
@@ -85,7 +86,8 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
   }
 
   private createUnSubscribeMessage(message: Messager) {
-    message.on('unsubscribe', async (intername: string, method: string) => {
+    message.on('unsubscribe', async (state: [string, string]) => {
+      const [intername, method] = state;
       const key = intername + ':' + method;
       if (this.has(key)) {
         const { unsubscribe, stacks } = this.get(key);
@@ -105,7 +107,7 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
     if (this.has(key)) {
       const { stacks } = this.get(key);
       for (const client of stacks.values()) {
-        client.publish(intername, method, state);
+        client.publish([intername, method, state]);
       }
     }
   }

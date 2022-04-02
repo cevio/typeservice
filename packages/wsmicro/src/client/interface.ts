@@ -8,9 +8,9 @@ export interface TRetryConfigs {
 
 export interface TClientStackState<T> {
   data: T,
-  backable: boolean,
+  backable?: boolean,
   timeout?: number,
-  type: 0 | 2 | 4,
+  type: 1 | 2 | 3,
   resolve: (value?: any) => void,
   reject: (reason?: any) => void,
 }

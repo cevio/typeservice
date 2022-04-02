@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { Server } from '../server';
 import { Client, TRetryConfigs } from '../client';
 import { Container } from 'inversify';
@@ -12,7 +13,7 @@ export * from './interface';
 export * from './utils';
 export * from './namespace';
 
-export class MicroService {
+export class MicroService extends EventEmitter {
   private readonly container: Container;
   private readonly registry: TRegistry;
   private readonly server: Server;
@@ -21,6 +22,8 @@ export class MicroService {
   private readonly clients = new Map<string, Client>();
 
   constructor(props: TMicroServiceConfigs) {
+    super();
+    this.setMaxListeners(+Infinity);
     this.registry = props.registry;
     this.retryConfigs = props.retry;
     this.container = props.container;
@@ -45,7 +48,7 @@ export class MicroService {
             interface: intername,
             method: method,
           }, feedback);
-        })
+        }, e => this.emit('error', e));
       });
       this.clients.set(key, client);
     }
@@ -54,28 +57,28 @@ export class MicroService {
 
   public async send<T = any>(props: Omit<TMicroServiceRequestProps<T>, 'timeout'>) {
     const current = await this.find(props.interface, props.method, 'methods', props.strategy);
-    if (!current) throw new RegistryNotMatchedException(props.interface, props.method);
+    if (!current) throw new RegistryNotMatchedException('RegistryNotMatchedException', props.interface, props.method);
     const app = this.createClient(current.hostname, Number(current.port || 0));
     return await app.send(props.interface, props.method, props.arguments);
   }
 
   public async sendback<T, O = any>(props: TMicroServiceRequestProps<O>): Promise<T> {
     const current = await this.find(props.interface, props.method, 'methods', props.strategy);
-    if (!current) throw new RegistryNotMatchedException(props.interface, props.method);
+    if (!current) throw new RegistryNotMatchedException('RegistryNotMatchedException', props.interface, props.method);
     const app = this.createClient(current.hostname, Number(current.port || 0));
     return await app.sendback(props.interface, props.method, props.arguments, props.timeout);
   }
 
   public async subscribe<T>(props: Omit<TMicroServiceRequestProps, 'arguments' | 'timeout'>, callback: (e: T) => void) {
     const current = await this.find(props.interface, props.method, 'publishes', props.strategy);
-    if (!current) throw new RegistryNotMatchedException(props.interface, props.method);
+    if (!current) throw new RegistryNotMatchedException('RegistryNotMatchedException', props.interface, props.method);
     const app = this.createClient(current.hostname, Number(current.port || 0));
     return await app.subscribe(props.interface, props.method, callback);
   }
 
   public async unsubscribe(props: Omit<TMicroServiceRequestProps, 'arguments' | 'timeout'>) {
     const current = await this.find(props.interface, props.method, 'publishes', props.strategy);
-    if (!current) throw new RegistryNotMatchedException(props.interface, props.method);
+    if (!current) throw new RegistryNotMatchedException('RegistryNotMatchedException', props.interface, props.method);
     const app = this.createClient(current.hostname, Number(current.port || 0));
     return await app.unsubscribe(props.interface, props.method);
   }
@@ -109,7 +112,7 @@ export class MicroService {
           const instance = MethodMetaCreator.instance(Object.getOwnPropertyDescriptor(ref.prototype, method));
           if (instance.has(SubscribeNameSpace)) {
             const value = instance.get<{ interface: string, method: string }>(SubscribeNameSpace);
-            await this.subscribe(value, res => object[method](res));
+            await this.subscribe(value, res => object[method](res)).catch(e => this.emit('error', e));
           }
         }
       }
