@@ -68,20 +68,26 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
     message.on('subscribe', async (state: [string, string]) => {
       const [intername, method] = state;
       const key = intername + ':' + method;
+      let init = false, obj: any;
       if (!this.has(key)) {
         const object = {
           unsubscribe: () => Promise.resolve(),
-          stacks: new Set<Messager>()
+          stacks: new Set<Messager>(),
+          value: null as any
         }
         this.set(key, object);
-        const unsubscribe = await this.micro.subscribe(
-          { interface: intername, method }, 
-          res => this.boardCastClients(intername, method, res)
-        );
-        object.unsubscribe = unsubscribe;
+        init = true;
+        obj = object;
       }
       const { stacks } = this.get(key);
       if (!stacks.has(message)) stacks.add(message);
+      if (init) {
+        const unsubscribe = await this.micro.subscribe(
+          { interface: intername, method }, 
+          res => this.boardCastClients(intername, method, res),
+        );
+        obj.unsubscribe = unsubscribe;
+      }
     })
   }
 
