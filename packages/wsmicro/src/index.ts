@@ -19,6 +19,7 @@ export interface TCreateWSMicroServerProps {
   heartbeat?: number,
   retry?: TRetryConfigs,
   port: number | TPortGetter,
+  onInit?: () => any | Promise<any>,
   bootstrap?: (port: number) => any | Promise<any>,
   destroyed?: (port: number) => any | Promise<any>,
 }
@@ -39,8 +40,9 @@ export function createWSMricoServer(configs: TCreateWSMicroServerProps) {
       heartbeat: configs.heartbeat,
       retry: configs.retry,
     });
-    await microService.listen(port);
     CONTEXT_WS_MICROSERVER.setContext(microService);
+    if (configs.onInit) await Promise.resolve(configs.onInit());
+    await microService.listen(port);
     if (configs.bootstrap) await Promise.resolve(configs.bootstrap(port));
     return async () => {
       await microService.close();

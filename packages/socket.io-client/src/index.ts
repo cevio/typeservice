@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Messager } from '@typeservice/message';
 
@@ -49,8 +49,7 @@ export class WebSocket extends EventEmitter {
     if (!chunks.has(callback)) {
       chunks.add(callback);
     }
-    this.message.subscribe([options.interface, options.method]);
-    return () => {
+    const rollback = () => {
       if (this.stacks.has(key)) {
         const chunks = this.stacks.get(key);
         if (chunks.has(callback)) {
@@ -62,6 +61,10 @@ export class WebSocket extends EventEmitter {
         }
       }
     }
+    return this.message.subscribe([options.interface, options.method]).then(() => rollback).catch(e => {
+      rollback();
+      return Promise.reject(e);
+    });
   }
 
   public unsubscribe(options: {
@@ -76,10 +79,18 @@ export class WebSocket extends EventEmitter {
     callback: (r: T) => void, 
     deps: any[] = [],
   ) {
+    const [error, setError] = useState(null);
     const fn = useCallback(callback, deps);
-    useEffect(() => this.subscribe({
-      interface: intername,
-      method
-    }, fn), [fn]);
+    useEffect(() => {
+      let rollback: () => void;
+      this.subscribe({
+        interface: intername,
+        method
+      }, fn).then((roll) => rollback = roll).catch(setError);
+      return () => {
+        if (rollback) return rollback();
+      }
+    }, [intername, method, fn]);
+    return error;
   }
 }
