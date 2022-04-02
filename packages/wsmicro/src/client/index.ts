@@ -158,6 +158,22 @@ export class Client extends EventEmitter {
   }
 
   public subscribe<T>(intername: string, method: string, callback: (res: T) => void) {
+    const key = this.createSubscribeKey(intername, method);
+    if (!this.subscribes.has(key)) this.subscribes.set(key, new Map());
+    const callbacks = this.subscribes.get(key);
+    if (!callbacks.has(callback)) {
+      const rollback = async () => {
+        if (callbacks.has(callback)) {
+          callbacks.delete(callback);
+        }
+        if (!callbacks.size) {
+          this.subscribes.delete(key);
+          await this.unsubscribe(intername, method);
+        }
+      }
+      callbacks.set(callback, rollback);
+    }
+    const rollback = callbacks.get(callback);
     return new Promise((resolve, reject) => {
       this.stacks.add({
         type: 2,
@@ -166,42 +182,25 @@ export class Client extends EventEmitter {
       })
       this.createCheckingStatus();
     }).then(() => {
-      const key = this.createSubscribeKey(intername, method);
-      if (!this.subscribes.has(key)) this.subscribes.set(key, new Map());
-      const callbacks = this.subscribes.get(key);
-      if (!callbacks.has(callback)) {
-        const rollback = async () => {
-          if (callbacks.has(callback)) {
-            callbacks.delete(callback);
-          }
-          if (!callbacks.size) {
-            this.subscribes.delete(key);
-            await this.unsubscribe(intername, method);
-          }
-        }
-        callbacks.set(callback, rollback);
-      }
-      return callbacks.get(callback);
+      this.emit('subscribe:success', intername, method);
+      return rollback;
+    }).catch(e => {
+      rollback();
+      this.emit('subscribe:error', intername, method, e);
+      return Promise.reject(e);
     })
   }
 
-  public resubscribe(
-    feedback?: (intername: string, method: string, callback: (res: any) => void) => Promise<TUnSubscribeFeedback>, 
-    onError?: (e: any) => void
-  ) {
+  public resubscribe(feedback?: (intername: string, method: string, callback: (res: any) => void) => Promise<TUnSubscribeFeedback>) {
     for (const [key, callbacks] of this.subscribes.entries()) {
       const sp = key.split(':');
       for (const callback of callbacks.keys()) {
         if (feedback) {
-          feedback(sp[0], sp[1], callback).catch(e => {
-            if (onError) return onError(e);
-            this.emit('error', e);
-          });
+          feedback(sp[0], sp[1], callback);
         } else {
-          this.subscribe(sp[0], sp[1], callback).catch(e => {
-            if (onError) return onError(e);
-            this.emit('error', e);
-          });
+          this.subscribe(sp[0], sp[1], callback)
+          .then(() => this.emit('resubscribe:success', sp[0], sp[1]))
+          .catch(e => this.emit('resubscribe:error', sp[0], sp[1], e));
         }
       }
     }

@@ -47,8 +47,14 @@ export class MicroService extends EventEmitter {
           return this.subscribe({
             interface: intername,
             method: method,
-          }, feedback);
-        }, e => this.emit('error', e));
+          }, feedback).then((callback) => {
+            this.emit('resubscribe:success', intername, method);
+            return callback;
+          }).catch(e => {
+            this.emit('resubscribe:error', intername, method, e);
+            return Promise.reject(e);
+          });
+        });
       });
       this.clients.set(key, client);
     }
@@ -73,14 +79,26 @@ export class MicroService extends EventEmitter {
     const current = await this.find(props.interface, props.method, 'publishes', props.strategy);
     if (!current) throw new RegistryNotMatchedException('RegistryNotMatchedException', props.interface, props.method);
     const app = this.createClient(current.hostname, Number(current.port || 0));
-    return await app.subscribe(props.interface, props.method, callback);
+    return await app.subscribe(props.interface, props.method, callback).then(r => {
+      this.emit('subscribe:success', props.interface, props.method);
+      return r;
+    }).catch(e => {
+      this.emit('subscribe:error', props.interface, props.method, e);
+      return Promise.reject(e);
+    });
   }
 
   public async unsubscribe(props: Omit<TMicroServiceRequestProps, 'arguments' | 'timeout'>) {
     const current = await this.find(props.interface, props.method, 'publishes', props.strategy);
     if (!current) throw new RegistryNotMatchedException('RegistryNotMatchedException', props.interface, props.method);
     const app = this.createClient(current.hostname, Number(current.port || 0));
-    return await app.unsubscribe(props.interface, props.method);
+    return await app.unsubscribe(props.interface, props.method).then(r => {
+      this.emit('unsubscribe:success', props.interface, props.method);
+      return r;
+    }).catch(e => {
+      this.emit('unsubscribe:error', props.interface, props.method, e);
+      return Promise.reject(e);
+    });
   }
 
   private find(
@@ -112,7 +130,13 @@ export class MicroService extends EventEmitter {
           const instance = MethodMetaCreator.instance(Object.getOwnPropertyDescriptor(ref.prototype, method));
           if (instance.has(SubscribeNameSpace)) {
             const value = instance.get<{ interface: string, method: string }>(SubscribeNameSpace);
-            await this.subscribe(value, res => object[method](res)).catch(e => this.emit('error', e));
+            await this.subscribe(value, res => object[method](res)).then((r) => {
+              this.emit('autosubscribe:success', value.interface, value.method);
+              return r;
+            }).catch(e => {
+              this.emit('autosubscribe:error', value.interface, value.method, e);
+              return Promise.reject(e);
+            });
           }
         }
       }
