@@ -79,7 +79,7 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
         init = true;
         obj = object;
       }
-      const { stacks } = this.get(key);
+      const { stacks, value } = this.get(key);
       if (!stacks.has(message)) stacks.add(message);
       if (init) {
         const unsubscribe = await this.micro.subscribe(
@@ -88,7 +88,7 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
         );
         obj.unsubscribe = unsubscribe;
       } else {
-        message.publish([intername, method, obj.value]);
+        message.publish([intername, method, value]);
       }
     })
   }
