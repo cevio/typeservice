@@ -1,6 +1,6 @@
 {
   "name": "@typeservice/socket.io",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "widget:socket.io",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/socket.io",
@@ -22,8 +22,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@typeservice/message": "^1.0.5",
-    "@typeservice/wsmicro": "^1.0.8",
+    "@typeservice/message": "^1.0.6",
+    "@typeservice/wsmicro": "^1.0.9",
     "socket.io": "^4.4.1"
   }
 }
