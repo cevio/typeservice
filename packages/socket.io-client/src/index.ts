@@ -10,7 +10,7 @@ export class WebSocket extends EventEmitter {
   constructor(url?: string) {
     super();
     this.setMaxListeners(+Infinity);
-    this.socket = io(url);
+    this.socket = io(url, { withCredentials: true });
     this.socket.on('faild', (...args) => this.emit('faild', ...args));
     this.socket.on('success', (...args: any[]) => {
       const handler = this.message.createReceiver();
