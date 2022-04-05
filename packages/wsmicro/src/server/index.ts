@@ -33,7 +33,7 @@ export class Server extends EventEmitter {
 
   public createService<T>(clazz: interfaces.Newable<T>) {
     const instance = ClassMetaCreator.instance(clazz);
-    if (instance.has(ServiceNameSpace) && !this.container.isBound(clazz)) {
+    if (instance.has(ServiceNameSpace)) {
       const namespace = instance.get<string>(ServiceNameSpace);
       const methods = this.getMehtodsByNamespace(clazz, PublicNameSpace);
       const subscribes = this.getMehtodsByNamespace(clazz, SubscribeNameSpace);
