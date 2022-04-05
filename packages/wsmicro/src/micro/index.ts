@@ -122,21 +122,23 @@ export class MicroService extends EventEmitter {
         });
       }
     }
-    for (const { ref, subscribes } of this.server.services.values()) {
-      if (subscribes && subscribes.length) {
-        const object = this.container.get(ref);
-        for (let i = 0; i < subscribes.length; i++) {
-          const method = subscribes[i];
-          const instance = MethodMetaCreator.instance(Object.getOwnPropertyDescriptor(ref.prototype, method));
-          if (instance.has(SubscribeNameSpace)) {
-            const value = instance.get<{ interface: string, method: string }>(SubscribeNameSpace);
-            await this.subscribe(value, res => object[method](res)).then((r) => {
-              this.emit('autosubscribe:success', value.interface, value.method);
-              return r;
-            }).catch(e => {
-              this.emit('autosubscribe:error', value.interface, value.method, e);
-              return Promise.reject(e);
-            });
+    if (this?.server?.services) {
+      for (const { ref, subscribes } of this.server.services.values()) {
+        if (subscribes && subscribes.length) {
+          const object = this.container.get(ref);
+          for (let i = 0; i < subscribes.length; i++) {
+            const method = subscribes[i];
+            const instance = MethodMetaCreator.instance(Object.getOwnPropertyDescriptor(ref.prototype, method));
+            if (instance.has(SubscribeNameSpace)) {
+              const value = instance.get<{ interface: string, method: string }>(SubscribeNameSpace);
+              await this.subscribe(value, res => object[method](res)).then((r) => {
+                this.emit('autosubscribe:success', value.interface, value.method);
+                return r;
+              }).catch(e => {
+                this.emit('autosubscribe:error', value.interface, value.method, e);
+                return Promise.reject(e);
+              });
+            }
           }
         }
       }
