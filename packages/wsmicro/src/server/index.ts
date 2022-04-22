@@ -69,7 +69,9 @@ export class Server extends EventEmitter {
           }
         }
         this.sockets.delete(so);
+        this.emit('disconnect', so);
       });
+      this.emit('connect', so);
     })
     for (const [key, { publishes, ref }] of this.services) {
       const object = this.container.get(ref);

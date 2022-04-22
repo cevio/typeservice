@@ -10,7 +10,7 @@ export class Socket extends EventEmitter {
   constructor(
     private readonly server: Server,
     private readonly connection: WebSocket, 
-    private readonly request: IncomingMessage,
+    public readonly request: IncomingMessage,
   ) {
     super();
     this.setMaxListeners(+Infinity);

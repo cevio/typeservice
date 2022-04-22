@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { Server } from '../server';
+import { Server, Socket } from '../server';
 import { Client, TRetryConfigs } from '../client';
 import { Container } from 'inversify';
 import { InterfaceNamspace } from './namespace';
@@ -30,6 +30,8 @@ export class MicroService extends EventEmitter {
     props.container.bind<MicroService>(MicroService).toConstantValue(this);
     if (props?.services.length && props.container instanceof Container) {
       this.server = new Server(props.container);
+      this.server.on('connect', (so: Socket) => this.emit('connect', so));
+      this.server.on('disconnect', (so: Socket) => this.emit('disconnect', so));
       props.services.forEach(service => this.server.createService(service));
       if (props.heartbeat) {
         this.server.setHeartBeat(props.heartbeat);
