@@ -4,7 +4,7 @@ import { EventEmitter } from 'events';
 import { Messager } from '@typeservice/message';
 import { Server } from '.';
 export class Socket extends EventEmitter {
-  private readonly message = new Messager();
+  public readonly message = new Messager();
   private readonly timer: NodeJS.Timer;
   private checking = false;
   constructor(
