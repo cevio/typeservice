@@ -41,9 +41,9 @@ export class Socket extends EventEmitter {
         this.connection.on('pong', resolve)
         this.connection.ping();
         this.message.last_write_time = Date.now();
-        const timer = setTimeout(() => this.connection.terminate(), heatbeat * 3);
+        const timer = setTimeout(() => this.connection.terminate(), heatbeat * 3).unref();
       }
-    }, 1000);
+    }, 1000).unref();
   }
 
   public close() {

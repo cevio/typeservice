@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { Server, Socket } from '../server';
+import { Server, Socket, TServiceState } from '../server';
 import { Client, TRetryConfigs } from '../client';
 import { Container } from 'inversify';
 import { InterfaceNamspace } from './namespace';
@@ -14,7 +14,7 @@ export * from './utils';
 export * from './namespace';
 
 export class MicroService extends EventEmitter {
-  private readonly container: Container;
+  public readonly container: Container;
   private readonly registry: TRegistry;
   private readonly server: Server;
   private readonly retryConfigs: TRetryConfigs;
@@ -37,6 +37,10 @@ export class MicroService extends EventEmitter {
         this.server.setHeartBeat(props.heartbeat);
       }
     }
+  }
+
+  get services() {
+    return this.server ? this.server.services : new Map<string, TServiceState<any>>();
   }
 
   private createClient(host: string, port: number) {
@@ -150,9 +154,6 @@ export class MicroService extends EventEmitter {
   public async close() {
     if (this.server) {
       await this.registry.unmountAll();
-      for (const client of this.clients.values()) {
-        client.close();
-      }
       this.server.close();
     }
   }

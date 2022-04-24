@@ -49,6 +49,32 @@ export function createWSMricoServer(configs: TCreateWSMicroServerProps) {
       CONTEXT_WS_MICROSERVER.setContext(undefined);
       if (configs.destroyed) await Promise.resolve(configs.destroyed(port));
     }
+  } 
+}
+
+interface Tinitialize {
+  initialize?(): Promise<() => Promise<void>>
+}
+
+export async function createWSMricoServerInitialize() {
+  const micro = CONTEXT_WS_MICROSERVER.value;
+  if (micro && micro.container && micro.services.size) {
+    const services = micro.services;
+    const rollbacks: (() => Promise<void>)[] = [];
+    for (const { ref } of services.values()) {
+      const target = micro.container.get(ref) as Tinitialize;
+      if (target.initialize) {
+        const feedback = await target.initialize();
+        if (typeof feedback === 'function') {
+          rollbacks.push(feedback);
+        }
+      }
+    }
+    return async () => {
+      for (let i = 0; i < rollbacks.length; i++) {
+        await rollbacks[i]();
+      }
+    }
   }
   
 }
