@@ -61,6 +61,7 @@ export class Messager extends Task {
 
   public disable() {
     this.id = defaultId;
+    this.callbacks.forEach(callback => callback.reject(new Exception(9999)));
     this.disabled = true;
     this.callbacks.clear();
   }
@@ -219,8 +220,8 @@ export class Messager extends Task {
           mode: status[1],
           twoway: false,
           data: {
-            status: Exception.isException(e) ? e.code : 500,
-            message: Exception.isException(e) ? e.messages : [e.message],
+            status: Exception.isException(e) ? (e as Exception).status : 500,
+            message: Exception.isException(e) ? (e as Exception).messages : [e.message],
           }
         })
       }
