@@ -150,6 +150,9 @@ export class MicroService extends EventEmitter {
   public async close() {
     if (this.server) {
       await this.registry.unmountAll();
+      for (const client of this.clients.values()) {
+        client.close();
+      }
       this.server.close();
     }
   }

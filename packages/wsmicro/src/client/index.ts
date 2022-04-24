@@ -37,6 +37,11 @@ export class Client extends EventEmitter {
     })
   }
 
+  public close() {
+    this.message.disable();
+    this.connection.close();
+  }
+
   get id() {
     return this.host + ':' + this.port;
   }
