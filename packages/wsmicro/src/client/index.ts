@@ -39,7 +39,7 @@ export class Client extends EventEmitter {
 
   public close() {
     this.message.disable();
-    this.connection.close();
+    this.connection.terminate();
   }
 
   get id() {

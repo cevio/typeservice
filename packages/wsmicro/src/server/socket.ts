@@ -48,7 +48,7 @@ export class Socket extends EventEmitter {
 
   public close() {
     this.message.disable();
-    this.connection.close();
+    this.connection.terminate();
   }
 
   public publish<T = any>(intername: string, method: string, state: T) {
