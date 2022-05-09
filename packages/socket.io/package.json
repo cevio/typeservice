@@ -1,6 +1,6 @@
 {
   "name": "@typeservice/socket.io",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "widget:socket.io",
   "author": "shenyunjie ",
   "homepage": "https://github.com/cevio/nppm/tree/master/packages/socket.io",
