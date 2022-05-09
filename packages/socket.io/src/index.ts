@@ -17,12 +17,12 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
     super();
   }
 
-  public createWebSocketServer<T = any>(server: HttpServer, callback: (client: Socket) => T | Promise<T>) {
+  public createWebSocketServer<T = any>(server: HttpServer, callback: (client: Socket, name?: string) => T | Promise<T>) {
     const io = new Server(server, this.configs);
     CONTEXT_WEBSOCKET.setContext(io);
     this.namespace = io.of(/^.+$/);
     this.namespace.on('connection', client => {
-      Promise.resolve(callback(client))
+      Promise.resolve(callback(client, this.namespace.name))
         .then((res: T) => {
           this.createCommunication(client, registries => registries[0])
           client.emit('success', res);
