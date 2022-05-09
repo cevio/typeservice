@@ -18,7 +18,7 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
   public createWebSocketServer<T = any>(server: HttpServer, callback: (client: Socket) => T | Promise<T>) {
     const io = new Server(server, this.configs);
     CONTEXT_WEBSOCKET.setContext(io);
-    io.of(/^.+$/).on('connection', client => {
+    io.on('connection', client => {
       Promise.resolve(callback(client))
         .then((res: T) => {
           this.createCommunication(client, registries => registries[0])
