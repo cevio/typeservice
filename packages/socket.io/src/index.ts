@@ -2,12 +2,14 @@ import { Server as HttpServer } from 'http';
 import { Socket, Server, ServerOptions } from 'socket.io';
 import { Messager } from '@typeservice/message';
 import { createContext } from '@typeservice/process';
-import { MicroService, TCommunication, TMicroServiceRequestProps } from '@typeservice/wsmicro';
+import { MicroService, TMicroServiceRequestProps } from '@typeservice/wsmicro';
 import { Exception } from '@typeservice/exception';
+import type { Namespace } from 'socket.io';
 
 export const CONTEXT_WEBSOCKET = createContext<Server>();
 
 export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, stacks: Set<Messager>, value: any }> {
+  private namespace: Namespace;
   constructor(
     private readonly micro: MicroService, 
     private readonly configs?: Partial<ServerOptions>
@@ -18,7 +20,8 @@ export class WebSocket extends Map<string, { unsubscribe: () => Promise<void>, s
   public createWebSocketServer<T = any>(server: HttpServer, callback: (client: Socket) => T | Promise<T>) {
     const io = new Server(server, this.configs);
     CONTEXT_WEBSOCKET.setContext(io);
-    io.on('connection', client => {
+    this.namespace = io.of(/^.+$/);
+    this.namespace.on('connection', client => {
       Promise.resolve(callback(client))
         .then((res: T) => {
           this.createCommunication(client, registries => registries[0])

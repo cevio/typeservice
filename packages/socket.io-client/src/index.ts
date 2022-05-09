@@ -7,10 +7,10 @@ export class WebSocket extends EventEmitter {
   private readonly socket: Socket;
   private readonly message = new Messager();
   private readonly stacks = new Map<string, Set<(r: any) => void>>();
-  constructor(query?: Record<string, any>) {
+  constructor(url?: string) {
     super();
     this.setMaxListeners(+Infinity);
-    this.socket = io({ withCredentials: true, query });
+    this.socket = io(url, { withCredentials: true });
     this.socket.on('faild', (...args) => this.emit('faild', ...args));
     this.socket.on('success', (...args: any[]) => {
       const handler = this.message.createReceiver();
