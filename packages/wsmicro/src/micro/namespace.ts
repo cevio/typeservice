@@ -17,6 +17,10 @@ export class InterfaceNamspace extends Set<UrlWithParsedQuery> {
     super();
   }
 
+  public reset() {
+    this.status = 0;
+  }
+
   private update(uris: UrlWithParsedQuery[]) {
     this.clear();
     uris.forEach(uri => this.add(uri));

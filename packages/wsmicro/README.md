@@ -1,11 +1,3 @@
-# `@typeservice/wsmicro`
+# @typeservice/wsmicro
 
-  > TODO: description
-  
-  ## Usage
-  
-  ```
-  const container = require('@typeservice/wsmicro');
-  
-  // TODO: DEMONSTRATE API
-  ```
+基于WS协议的微服务架构

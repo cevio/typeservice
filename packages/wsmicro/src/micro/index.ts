@@ -50,6 +50,9 @@ export class MicroService extends EventEmitter {
       client.on('end', () => {
         this.clients.delete(key);
         client.resubscribe((intername, method, feedback) => {
+          if (this.registries.has(intername)) {
+            this.registries.get(intername).reset();
+          }
           return this.subscribe({
             interface: intername,
             method: method,
