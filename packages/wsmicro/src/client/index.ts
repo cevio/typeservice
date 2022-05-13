@@ -4,6 +4,7 @@ import { EventEmitter } from 'events';
 import { Messager } from '@typeservice/message';
 import { TRetryConfigs, TClientStackState } from './interface';
 import { TCommunication } from '../server/interface';
+import { Exception } from '@typeservice/exception';
 export * from './interface';
 
 type TSubscribeFeedback = (res: any) => void;
@@ -20,7 +21,9 @@ export class Client extends EventEmitter {
   constructor(
     private readonly host: string, 
     private readonly port: number,
-    private readonly configs?: TRetryConfigs
+    private readonly configs: TRetryConfigs = {
+      retries: 0,
+    }
   ) {
     super();
     this.on('open', () => this.executeSuccess());
@@ -186,9 +189,13 @@ export class Client extends EventEmitter {
         resolve, reject,
       })
       this.createCheckingStatus();
-    }).then(() => {
-      this.emit('subscribe:success', intername, method);
-      return rollback;
+    }).then((res: boolean) => {
+      if (res) {
+        this.emit('subscribe:success', intername, method);
+        return rollback;
+      } else {
+        throw new Exception(1008, '订阅失败');
+      }
     }).catch(e => {
       rollback();
       this.emit('subscribe:error', intername, method, e);

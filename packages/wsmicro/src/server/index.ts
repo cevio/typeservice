@@ -31,6 +31,11 @@ export class Server extends EventEmitter {
     return this;
   }
 
+  /**
+   * 注册服务类
+   * @param clazz 服务类
+   * @returns
+   */
   public createService<T>(clazz: interfaces.Newable<T>) {
     const instance = ClassMetaCreator.instance(clazz);
     if (instance.has(ServiceNameSpace)) {
@@ -43,20 +48,64 @@ export class Server extends EventEmitter {
         ref: clazz,
         methods, publishes, subscribes,
       })
+
+      for (let i = 0; i < publishes.length; i++) {
+        const effection = this.createPublishEffection(namespace, clazz, publishes[i]);
+        this.effections.add(effection);
+      }
     }
     return this;
   }
 
+  /**
+   * 创建Publish响应方法
+   * @param namespace 
+   * @param clazz 
+   * @param method 
+   */
+  private createPublishEffection<T, O>(namespace: string, clazz: interfaces.Newable<T>, method: string) {
+    const object = this.container.get(clazz);
+    const obj = Object.getOwnPropertyDescriptor(clazz.prototype, method);
+    const instance = MethodMetaCreator.instance(obj);
+    const value = instance.get(PublishNameSpace) as ((newValue: O, oldValue: O) => boolean) | boolean;
+    let old: O = null;
+    return effect(() => {
+      // @ts-ignore
+      const fn = object[method] as () => O;
+      const oldValue = old;
+      const newValue = fn();
+      old = newValue;
+      if (typeof value === 'function') {
+        if (value(newValue, oldValue)) {
+          this.publish(namespace, method, newValue);
+        }
+      } else if (typeof value === 'boolean' && value) {
+        this.publish(namespace, method, newValue);
+      }
+      return newValue;
+    }, { lazy: true });
+  }
+
+  /**
+   * 取得带有某个特征的方法集合
+   * @param clazz 
+   * @param namespace 
+   * @returns 
+   */
   private getMehtodsByNamespace<T>(clazz: interfaces.Newable<T>, namespace: string) {
     return Object.getOwnPropertyNames(clazz.prototype).filter(name => {
       if (name === 'constructor') return false;
       if (typeof clazz.prototype[name] !== 'function') return false;
       const obj = Object.getOwnPropertyDescriptor(clazz.prototype, name);
       const instance = MethodMetaCreator.instance(obj);
-      return instance.has(namespace) && !!instance.get(namespace);
+      return instance.has(namespace);
     });
   }
 
+  /**
+   * 启动服务
+   * @param port 服务的端口
+   */
   public listen(port: number) {
     this.connection = new WebSocketServer({ port, maxPayload: Infinity });
     this.connection.on('connection', (socket, request) => {
@@ -73,18 +122,7 @@ export class Server extends EventEmitter {
       });
       this.emit('connect', so);
     })
-    for (const [key, { publishes, ref }] of this.services) {
-      const object = this.container.get(ref);
-      for (let i = 0; i < publishes.length; i++) {
-        const publishName = publishes[i];
-        const effection = effect(() => {
-          const res = object[publishName]();
-          this.publish(key, publishName, res);
-          return res;
-        })
-        this.effections.add(effection);
-      }
-    }
+    this.effections.forEach(effection => effection());
   }
 
   public close() {
@@ -97,6 +135,12 @@ export class Server extends EventEmitter {
     this.connection.close();
   }
 
+  /**
+   * 向客户端发送订阅信息
+   * @param intername 
+   * @param method 
+   * @param state 
+   */
   private publish<T = any>(intername: string, method: string, state: T) {
     const key = intername + ':' + method;
     if (this.subscribes.has(key)) {
@@ -107,35 +151,63 @@ export class Server extends EventEmitter {
     }
   }
 
+  /**
+   * 加入服务端订阅
+   * @param intername 
+   * @param method 
+   * @param socket 
+   */
   public subscribe(intername: string, method: string, socket: Socket) {
-    if (!this.services.has(intername)) throw new InterfaceNotFoundException(intername);
-    const { publishes } = this.services.get(intername);
-    if (!publishes.includes(method)) throw new MethodNotFoundException(intername, method);
-    const key = intername + ':' + method;
-    if (!this.subscribes.has(key)) {
-      this.subscribes.set(key, new Set());
+    if (this.services.has(intername)) {
+      const { publishes } = this.services.get(intername);
+      if (publishes.includes(method)) {
+        const key = intername + ':' + method;
+        if (!this.subscribes.has(key)) {
+          this.subscribes.set(key, new Set());
+        }
+        const chunks = this.subscribes.get(key);
+        if (!chunks.has(socket)) {
+          chunks.add(socket);
+        }
+        const object = this.container.get(this.services.get(intername).ref);
+        const res = object[method]();
+        socket.publish(intername, method, res);
+        return true;
+      }
     }
-    const chunks = this.subscribes.get(key);
-    if (!chunks.has(socket)) {
-      chunks.add(socket);
-    }
-    const object = this.container.get(this.services.get(intername).ref);
-    const res = object[method]();
-    socket.publish(intername, method, res);
+    return false;
   }
 
+  /**
+   * 取消服务端订阅
+   * @param intername 
+   * @param method 
+   * @param socket 
+   * @returns 
+   */
   public unsubscribe(intername: string, method: string, socket: Socket) {
-    if (!this.services.has(intername)) throw new InterfaceNotFoundException(intername);
-    const { publishes } = this.services.get(intername);
-    if (!publishes.includes(method)) throw new MethodNotFoundException(intername, method);
-    const key = intername + ':' + method;
-    if (!this.subscribes.has(key)) return;
-    const chunks = this.subscribes.get(key);
-    if (chunks.has(socket)) {
-      chunks.delete(socket);
+    if (this.services.has(intername)) {
+      const { publishes } = this.services.get(intername);
+      if (publishes.includes(method)) {
+        const key = intername + ':' + method;
+        if (!this.subscribes.has(key)) return false;
+        const chunks = this.subscribes.get(key);
+        if (chunks.has(socket)) {
+          chunks.delete(socket);
+        }
+        return true;
+      }
     }
+    return false;
   }
 
+  /**
+   * 执行服务端请求，得到结果后返回
+   * @param intername 
+   * @param method 
+   * @param args 
+   * @returns 
+   */
   public async execute<T>(intername: string, method: string, args: any[] = []) {
     if (!this.services.has(intername)) throw new InterfaceNotFoundException(intername);
     const { ref, methods } = this.services.get(intername);

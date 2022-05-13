@@ -20,6 +20,7 @@ export class Socket extends EventEmitter {
     this.message.on('request', (data: [string, string, any[]]) => this.server.execute(data[0], data[1], data[2]));
     this.message.on('subscribe', (data: [string, string]) => this.server.subscribe(data[0], data[1], this));
     this.message.on('unsubscribe', (data: [string, string]) => this.server.unsubscribe(data[0], data[1], this));
+    // 被动关闭
     this.connection.on('close', () => {
       this.connection.off('message', handler);
       clearInterval(this.timer);
@@ -46,6 +47,9 @@ export class Socket extends EventEmitter {
     }, 1000).unref();
   }
 
+  /**
+   * 主动关闭
+   */
   public close() {
     this.message.disable();
     this.connection.terminate();
