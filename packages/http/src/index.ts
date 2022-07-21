@@ -27,9 +27,8 @@ export class HTTP extends Koa {
     caseSensitive: true,
     ignoreTrailingSlash: true,
     allowUnsafeRegex: true,
-    defaultRoute: () => {
-      throw new HttpNotFoundException();
-    },
+    // @ts-ignore
+    defaultRoute: async (ctx: Context, next: Next) => await next(),
     onBadUrl: () => {
       throw new HttpBadRequestException();
     }
